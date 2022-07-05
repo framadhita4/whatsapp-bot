@@ -1,17 +1,19 @@
 const fetch = require("node-fetch");
+const fs = require("fs");
 
-async function wait(media, callback) {
+async function wait(path, callback) {
   await fetch("https://api.trace.moe/search", {
     method: "POST",
-    body: media,
+    body: fs.readFileSync(path),
     headers: { "Content-Type": "image/jpeg" },
   })
     .then((elm) => {
       return elm.json();
     })
-    .then((elm) => {
+    .then(async (elm) => {
       console.log(elm);
-      callback(elm.result[0]);
+      await callback(elm.result[0]);
+      fs.unlinkSync(path);
     });
 }
 
