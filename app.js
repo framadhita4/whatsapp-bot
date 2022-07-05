@@ -1,9 +1,15 @@
 const { Client, LocalAuth, MessageMedia, Buttons } = require("whatsapp-web.js");
 const qrcode = require("qrcode-terminal");
 const generate = require("./yt2mp3");
+const wait = require("./wait");
+const fs = require("fs");
 
 const client = new Client({
   authStrategy: new LocalAuth(),
+  puppeteer: {
+    executablePath:
+      "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  },
 });
 
 client.on("qr", (qr) => {
@@ -30,19 +36,9 @@ client.on("ready", async () => {
 });
 
 client.on("message", async (msg) => {
-  if (msg.body == "!admin") {
-    console.log(msg);
-  }
   if (msg.hasMedia && msg.type == "image" && msg.body == "!sticker") {
     const sticker = await msg.downloadMedia();
     msg.reply(sticker, msg.from, { sendMediaAsSticker: true });
-  }
-});
-
-client.on("message", async (msg) => {
-  // msg.react("🍇");
-  if (msg.body == "!ping") {
-    msg.reply("pong");
   }
   if (msg.body.search("!download") != -1) {
     msg.reply("Downloading...");
@@ -51,6 +47,26 @@ client.on("message", async (msg) => {
       const media = MessageMedia.fromFilePath(`${__dirname}/${id}.mp3`);
       await msg.reply(media);
     });
+  }
+  if (msg.hasMedia && msg.type == "image" && msg.body == "!animek") {
+    const media = await msg.downloadMedia();
+    fs.writeFile(
+      "./upload/" + media.filename,
+      media.data,
+      "base64",
+      function (err) {
+        if (err) {
+          console.log(err);
+        }
+      }
+    );
+    // wait(media, async (elm) => {
+    //   await msg.reply(`${elm.filename}
+    //   Episode: ${elm.episode}
+    //   ${Math.floor(elm.similarity / 0.01)}% similarity`);
+    //   const video = await MessageMedia.fromUrl(elm.video);
+    //   await msg.reply(video);
+    // });
   }
 });
 
@@ -67,9 +83,6 @@ client.on("message", async (msg) => {
     }
     await msg.reply(text, msg.from, { mentions });
   }
-});
-
-client.on("message", async (msg) => {
   if (msg.body === "!pengumuman") {
     const chat = await msg.getChat();
     let text = "";
